@@ -1,22 +1,25 @@
+const webpack = require('webpack')
 const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
+const { assign } = Object
+require('dotenv').config()
 
+const { PORT } = process.env
 const PATHS = {
-  app: path.join(__dirname, 'app'),
+  app: path.join(__dirname, 'src'),
   build: path.join(__dirname, 'build')
 }
 
 const commonConfig = {
   entry: {
-    app: PATHS.app
+    app: [
+      'react-hot-loader/patch',
+      PATHS.app
+    ]
   },
   output: {
     path: PATHS.build,
     filename: '[name].js'
-  },
-  devServer: {
-    port: 9966,
-    historyApiFallback: true
   },
   module: {
     loaders: [
@@ -32,13 +35,33 @@ const commonConfig = {
     ]
   },
   plugins: [
+    new webpack.HotModuleReplacementPlugin(),
     new HtmlWebpackPlugin({
-      title: 'Webpack demo'
+      title: 'Webpack tut'
     })
   ]
 }
 
+const developmentConfig = () => {
+  const config = {
+    devServer: {
+      historyApiFallback: true,
+      hot: true,
+      port: PORT
+    }
+  }
+
+  return assign(
+    {},
+    commonConfig,
+    config
+  )
+}
+
+const productionConfig = () => commonConfig
+
 module.exports = env => {
-  console.log({ env })
-  return commonConfig
+  return env === 'production'
+    ? productionConfig()
+    : developmentConfig()
 }
